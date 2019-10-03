@@ -1,7 +1,9 @@
 import utils
 import query as Query
 import pickle
-
+import sys
+import numpy
+numpy.set_printoptions(threshold=sys.maxsize)
 did, time_range = utils.argument_parser()
 #
 # query_str = input("Metric to query : ")
@@ -9,8 +11,11 @@ did, time_range = utils.argument_parser()
 # output_file = input("Enter ouput file name : ")
 
 queries = {
-    'sdm_count_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.sdm, did="{}"), "_source")'.format(did),
-    'indexed_doc_per_container' : 'mdiff(1m,avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source"))'.format(did)
+    'inputsdm_count_per_container' : 'avg(ts(dd.vRNI.UploadHandler.sdm, did="{}"), "_source")'.format(did),
+    'configstore_cache_miss_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getMiss, did="{}"), "_source")'.format(did),
+    'configstore_cache_hit_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getHit, did="{}"), "_source")'.format(did),
+    'doc_indexed_per_container' : 'avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source")'.format(did),
+    'program_time_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.processorConsumption, did="{}"), "_source")'.format(did)
 }
 
 output = {}
@@ -19,6 +24,7 @@ granuality = 'm'
 output_file = 'test'
 
 for queryname in queries.keys():
+    print("Fetching "+ queryname)
     api_response = Query.query_wf(queries[queryname], granuality,time_range)
     stats_output = utils.response_tostats(api_response,Query.filtered_stats)
     for stat in stats_output:
@@ -26,7 +32,7 @@ for queryname in queries.keys():
             output[stat.tag][queryname] = stat.stats
         else:
             output[stat.tag] = {queryname : stat.stats}
-print(output)
+
 with open('outpur.pickle', 'wb') as handle:
     pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 # disk_util = Metric("disk utilization", mdiff(1m, avg(ts(dd.vRNI.UploadHandler.sdm, did="DPSZ9NG"), sdm))
