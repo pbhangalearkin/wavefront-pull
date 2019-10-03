@@ -1,19 +1,34 @@
 import utils
-import query
+import query as Query
+import pickle
 
-time_range = utils.argument_parser()
+did, time_range = utils.argument_parser()
 #
 # query_str = input("Metric to query : ")
 # granuality = input("Enter Granuality[h/m/d] : ")
 # output_file = input("Enter ouput file name : ")
 
-query_str = 'avg(ts(dd.vRNI.UploadHandler.sdm, did="DPSZ9NG"), sdm)'
+queries = {
+    'sdm_count_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.sdm, did="{}"), "_source")'.format(did),
+    'indexed_doc_per_container' : 'mdiff(1m,avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source"))'.format(did)
+}
+
+output = {}
+
 granuality = 'm'
 output_file = 'test'
 
-api_response = query.query_wf(query_str, granuality,time_range)
-stats_output = utils.response_tostats(api_response,query.filtered_stats)
-print(stats_output)
+for queryname in queries.keys():
+    api_response = Query.query_wf(queries[queryname], granuality,time_range)
+    stats_output = utils.response_tostats(api_response,Query.filtered_stats)
+    for stat in stats_output:
+        if stat.tag in output:
+            output[stat.tag][queryname] = stat.stats
+        else:
+            output[stat.tag] = {queryname : stat.stats}
+print(output)
+with open('outpur.pickle', 'wb') as handle:
+    pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 # disk_util = Metric("disk utilization", mdiff(1m, avg(ts(dd.vRNI.UploadHandler.sdm, did="DPSZ9NG"), sdm))
 #                    'avg(ts(dd.system.io.util, did="{}" and iid="*" and source="*" and role="platform" and device="dm-6"))'.format(
 #                        did), threshold=20)

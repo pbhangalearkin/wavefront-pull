@@ -9,7 +9,7 @@ def argument_parser():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-did", type=str, help="did for wavefront", default="DPSZ9NG")  # "DP10XVX")
+    parser.add_argument("-did", type=str, help="did for wavefront", default="DP10XVX")  # "DP10XVX")
     parser.add_argument("-cs", "--current-start", type=str, help="Start of Current Time Frame(UTC)",
                         default=yesterdays_time.strftime("%Y-%m-%d-%H"))
 
@@ -22,7 +22,7 @@ def argument_parser():
     start_time  = datetime.datetime.strptime(args.current_start, "%Y-%m-%d-%H")
     end_time = start_time + datetime.timedelta(days=1)
     run_time = to_epoch_range(start_time,end_time)
-    return run_time
+    return did, run_time
 
 
 # converts to epoch. the start and end times are assumed to be in UTC timezone.

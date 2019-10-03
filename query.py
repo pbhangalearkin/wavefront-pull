@@ -25,9 +25,8 @@ class TaggedStats:
         self.tag = tag
         self.stats = stats
 
-    def __repr__(self):
-        print(self.stats.size)
-        return ""
+    # def __repr__(self):
+    #     return ""
 
 
 def query_wf(
@@ -56,7 +55,6 @@ def query_wf(
             i=True, auto_events=False, summarization=summarization,
             list_mode=True, strict=True, include_obsolete_metrics=False,
             sorted=False, cached=True)
-        print(api_response)
         return api_response
     except ApiException as e:
         print("Exception when calling QueryApi->query_api: %s\n" % e)
