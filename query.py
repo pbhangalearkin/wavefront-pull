@@ -60,5 +60,4 @@ def query_wf(
         print("Exception when calling QueryApi->query_api: %s\n" % e)
 
 def filtered_stats(df, tag=None):
-    x = df['value'].to_numpy()
-    return TaggedStats(tag, x)
+    return TaggedStats(tag,df)

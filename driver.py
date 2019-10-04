@@ -28,12 +28,13 @@ for queryname in queries.keys():
     api_response = Query.query_wf(queries[queryname], granuality,time_range)
     stats_output = utils.response_tostats(api_response,Query.filtered_stats)
     for stat in stats_output:
+        print(stat.tag)
         if stat.tag in output:
             output[stat.tag][queryname] = stat.stats
         else:
             output[stat.tag] = {queryname : stat.stats}
 
-with open('outpur.pickle', 'wb') as handle:
+with open('output.pickle', 'wb') as handle:
     pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 # disk_util = Metric("disk utilization", mdiff(1m, avg(ts(dd.vRNI.UploadHandler.sdm, did="DPSZ9NG"), sdm))
 #                    'avg(ts(dd.system.io.util, did="{}" and iid="*" and source="*" and role="platform" and device="dm-6"))'.format(
