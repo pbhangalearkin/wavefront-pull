@@ -3,6 +3,8 @@ import sys
 import numpy as np
 import utils
 import pandas as pd
+from sklearn.linear_model import LinearRegression
+
 np.set_printoptions(threshold=sys.maxsize)
 
 with open('output.pickle', 'rb') as handle:
@@ -22,6 +24,12 @@ for job in b['program_time_per_container']:
     merged_panda_series_numpy[np.isnan(merged_panda_series_numpy)] = 0
     data = np.concatenate((data,merged_panda_series_numpy))
 data = data[1:]
+
+program_time = data[:,4]
+features = data[:,np.arange(4)]
+reg = LinearRegression().fit(features, program_time)
+print(reg.score(features,program_time))
+# reg = LinearRegression().fit(data[], y)
     #print(merged_panda_series.to_numpy())
             # else:
             #     print(merged_panda_series)
