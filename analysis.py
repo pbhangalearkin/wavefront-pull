@@ -8,6 +8,7 @@ np.set_printoptions(threshold=sys.maxsize)
 with open('output.pickle', 'rb') as handle:
     b = pickle.load(handle)
 
+data = np.zeros(shape=(1,6))
 for job in b['program_time_per_container']:
     merged_panda_series = b['program_time_per_container'][job]
     for query in utils.queries.keys():
@@ -16,7 +17,12 @@ for job in b['program_time_per_container']:
                 merged_panda_series = pd.merge_asof(merged_panda_series,b[query][job], on='timestamp', allow_exact_matches=False)
             else:
                 merged_panda_series[query] = merged_panda_series['timestamp']*0
-    print(merged_panda_series.to_string())
+    merged_panda_series = merged_panda_series[sorted(merged_panda_series.columns)]
+    merged_panda_series_numpy = merged_panda_series.to_numpy()
+    merged_panda_series_numpy[np.isnan(merged_panda_series_numpy)] = 0
+    data = np.concatenate((data,merged_panda_series_numpy))
+data = data[1:]
+    #print(merged_panda_series.to_numpy())
             # else:
             #     print(merged_panda_series)
             #     merged_panda_series = pd.merge_asof(merged_panda_series, , on='timestamp', allow_exact_matches=False)
