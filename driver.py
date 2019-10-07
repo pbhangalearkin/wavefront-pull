@@ -20,7 +20,7 @@ output_file = 'test'
 for queryname in utils.queries.keys():
     print("Fetching "+ queryname)
     api_response = Query.query_wf(utils.queries[queryname], granuality,time_range)
-    stats_output = utils.response_tostats(api_response,Query.filtered_stats)
+    stats_output = utils.response_tostats(api_response,Query.filtered_stats,queryname)
     output[queryname] = {}
     for stat in stats_output:
         print(stat.tag)

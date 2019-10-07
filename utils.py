@@ -2,16 +2,17 @@ import datetime
 import pandas as pd
 import calendar
 import argparse
-did = None
+
 queries = {
-    'inputsdm_count_per_container' : 'avg(ts(dd.vRNI.UploadHandler.sdm, did="{}"), "_source")'.format(did),
-    'configstore_cache_miss_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getMiss, did="{}"), "_source")'.format(did),
-    'configstore_cache_hit_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getHit, did="{}"), "_source")'.format(did),
-    'doc_indexed_per_container' : 'avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source")'.format(did),
-    'program_time_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.processorConsumption, did="{}"), "_source")'.format(did)
-}
+        'inputsdm_count_per_container': 'avg(ts(dd.vRNI.UploadHandler.sdm, did="{}"), "_source")',
+        'configstore_cache_miss_per_container': 'avg(ts(dd.vRNI.CachedConfigStore.getMiss, did="{}"), "_source")',
+        'configstore_cache_hit_per_container': 'avg(ts(dd.vRNI.CachedConfigStore.getHit, did="{}"), "_source")',
+        'doc_indexed_per_container': 'avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source")',
+        'program_time_per_container': 'avg(ts(dd.vRNI.GenericStreamTask.processorConsumption, did="{}"), "_source")'
+    }
+
 def argument_parser():
-    global did
+    global queries
     current_time = datetime.datetime.now()
     yesterdays_time = current_time - datetime.timedelta(days=1)
 
@@ -27,9 +28,12 @@ def argument_parser():
     info += "Stats from: " + args.current_start + "\n"
 
     print(info)
-    start_time  = datetime.datetime.strptime(args.current_start, "%Y-%m-%d-%H")
+    start_time = datetime.datetime.strptime(args.current_start, "%Y-%m-%d-%H")
     end_time = start_time + datetime.timedelta(days=1)
-    run_time = to_epoch_range(start_time,end_time)
+    run_time = to_epoch_range(start_time, end_time)
+
+    for query in queries.keys():
+        queries[query] = queries[query].format(did)
     return did, run_time
 
 
@@ -72,7 +76,7 @@ def timerange_daybeforeyesterday():
     return to_epoch_range(daybefore, yesterday)
 
 
-def multiseries_to_stats(multiseries, df_tostats):
+def multiseries_to_stats(multiseries, df_tostats, queryname):
     """
     :param multiseries: A list of timeseries
     :param df_tostats: Function that takes a dataframe and returns a TaggedStats object
@@ -86,19 +90,19 @@ def multiseries_to_stats(multiseries, df_tostats):
         assert (len(tags) == 1, 'Expected 1 tag, but found' + str(len(tags)))
 
         tag = list(tags.values())[0]
-        result.append(df_tostats(to_df(raw_data), tag))
+        result.append(df_tostats(to_df(raw_data, queryname), tag))
 
     return result
 
 
-def to_df(raw_data):
-    header = ['timestamp', 'value']
+def to_df(raw_data, queryname):
+    header = ['timestamp', queryname]
     return pd.DataFrame(data=raw_data, columns=header)
 
 
 # Takes the wavefront api response and converts into a dataframe
 # containing two colums [timestamp, value]
-def response_tostats(api_response, df_tostats):
+def response_tostats(api_response, df_tostats, queryname):
     """
     :param api_response: The response returned from wavefront
     :param df_tostats: A function that takes a dataframe and returns a stats
@@ -110,11 +114,11 @@ def response_tostats(api_response, df_tostats):
         return []
     timeseries = api_response.timeseries
     if timeseries is None:
-        print("ERROR: timeseries not found for " , api_response.name)
+        print("ERROR: timeseries not found for ", api_response.name)
         return []
 
     if len(timeseries) == 1:
-        df = to_df(timeseries[0].data)
+        df = to_df(timeseries[0].data, queryname)
         return [df_tostats(df)]
     else:
-        return multiseries_to_stats(timeseries, df_tostats)
+        return multiseries_to_stats(timeseries, df_tostats, queryname)
