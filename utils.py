@@ -2,8 +2,16 @@ import datetime
 import pandas as pd
 import calendar
 import argparse
-
+did = None
+queries = {
+    'inputsdm_count_per_container' : 'avg(ts(dd.vRNI.UploadHandler.sdm, did="{}"), "_source")'.format(did),
+    'configstore_cache_miss_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getMiss, did="{}"), "_source")'.format(did),
+    'configstore_cache_hit_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getHit, did="{}"), "_source")'.format(did),
+    'doc_indexed_per_container' : 'avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source")'.format(did),
+    'program_time_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.processorConsumption, did="{}"), "_source")'.format(did)
+}
 def argument_parser():
+    global did
     current_time = datetime.datetime.now()
     yesterdays_time = current_time - datetime.timedelta(days=1)
 

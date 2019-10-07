@@ -10,29 +10,21 @@ did, time_range = utils.argument_parser()
 # granuality = input("Enter Granuality[h/m/d] : ")
 # output_file = input("Enter ouput file name : ")
 
-queries = {
-    'inputsdm_count_per_container' : 'avg(ts(dd.vRNI.UploadHandler.sdm, did="{}"), "_source")'.format(did),
-    'configstore_cache_miss_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getMiss, did="{}"), "_source")'.format(did),
-    'configstore_cache_hit_per_container' : 'avg(ts(dd.vRNI.CachedConfigStore.getHit, did="{}"), "_source")'.format(did),
-    'doc_indexed_per_container' : 'avg(ts(dd.vRNI.ConfigIndexerHelper.indexCount, did="{}"), "_source")'.format(did),
-    'program_time_per_container' : 'avg(ts(dd.vRNI.GenericStreamTask.processorConsumption, did="{}"), "_source")'.format(did)
-}
+
 
 output = {}
 
 granuality = 'm'
 output_file = 'test'
 
-for queryname in queries.keys():
+for queryname in utils.queries.keys():
     print("Fetching "+ queryname)
-    api_response = Query.query_wf(queries[queryname], granuality,time_range)
+    api_response = Query.query_wf(utils.queries[queryname], granuality,time_range)
     stats_output = utils.response_tostats(api_response,Query.filtered_stats)
+    output[queryname] = {}
     for stat in stats_output:
         print(stat.tag)
-        if stat.tag in output:
-            output[stat.tag][queryname] = stat.stats
-        else:
-            output[stat.tag] = {queryname : stat.stats}
+        output[queryname][stat.tag] = stat.stats
 
 with open('output.pickle', 'wb') as handle:
     pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
